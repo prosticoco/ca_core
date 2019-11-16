@@ -4,9 +4,9 @@ import json
 import logging
 import os
 import traceback
-import hashlib
-from user_db_manager import *
-
+from db_manager import *
+from ca_crypto import *
+import base64
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -44,10 +44,11 @@ class Server :
 class CACoreServer(Server) :
 
 	
-	def __init__(self,name,ip,port,db_manager,cert_path=None,key_path=None):
+	def __init__(self,name,ip,port,db_manager,ca_crypto,cert_path=None,key_path=None):
 
 		Server.__init__(self,name,ip,port,certificate= cert_path, key = key_path)
 		self.user_db = db_manager
+		self.ca_crypto = ca_crypto
 		self.add_url("/new_certificate","new_certificate",handler=self.new_certificate,methods=['POST'])
 		self.add_url("/current_state","current_state",handler=self.current_state,methods=['GET'])
 		self.add_url("/revocation_list","revocation_list",handler=self.revocation_list,methods=['GET'])
