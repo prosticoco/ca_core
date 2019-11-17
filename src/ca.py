@@ -36,7 +36,7 @@ if __name__ == '__main__':
 	parser.add_argument('--ip',default='127.0.0.1',help='server ip')
 	parser.add_argument('--user', default='root',help='database username')
 	parser.add_argument('--host', default='localhost',help='db username host ip')
-	parser.add_argument('--db', default='imovies',help='database name')
+	parser.add_argument('--db', default='coreCA',help='database name')
 	parser.add_argument('--pwd', default='toor',help='db user password')
 	parser.add_argument('--cap12',default='p12/ca.p12',help='location of the servers p12 file')
 	parser.add_argument('--crl',default='crl/crl.pem',help='location of the certificate revocation list file')
