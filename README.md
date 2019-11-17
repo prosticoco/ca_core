@@ -79,7 +79,7 @@ When prompted a common name, the ip address of the server must be specified. if 
 
 ## VM
 
-A VM is available at : <vm is not uploaded yet>
+A VM is available at : _N/A_
 
 Everything should be already installed on it hence should follow instructions above to run the server. 
 

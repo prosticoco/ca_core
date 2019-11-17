@@ -18,7 +18,7 @@ def main(args):
 	ca_passphrase = args.p12pass
 	employee_folder = args.empfolder
 	load_p12 = not args.newkeys
-	gload_crl = not args.newcrl
+	load_crl = not args.newcrl
 
 
 	db_manager = DBManager(db_host,db_username,db_pwd,db_name)

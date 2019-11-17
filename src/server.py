@@ -12,9 +12,51 @@ log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
 
+
+class Endpoint :
+
+	def __init__(self,action,name):
+
+		self.action = action
+		self.name = name
+
+	def __call__(self, *args):
+
+		self.log_before_action(request)
+		answer = self.action()
+
+		return answer
+
+	def log_before_action(self,request):
+
+		try : 
+
+			log_line = ""
+			log_line += str(request.method) + " "
+			log_line += str(self.name) + " "
+			log_line += str(request.remote_addr) + " "
+			logging.info(log_line)
+			if request.method == 'POST':
+				log_line = str(json.loads(request.get_json()))
+				logging.info(log_line)
+
+		except Exception as e:
+
+			log_line = "EXCEPTION CAUGHT "
+			log_line += str(e) + " "
+			log_line += str(request.remote_addr)
+			logging.info(log_line)
+
+
+
+
+
+
 class Server :
 
 	def __init__(self,name,ip,port,certificate=None,key=None):
+
+		logging.basicConfig(filename='logs/server.log',level=logging.DEBUG)
 
 		self.app = Flask(name)
 		self.port = port
@@ -24,8 +66,7 @@ class Server :
 
 
 	def add_url(self,endpoint=None,endpoint_name=None,handler=None,methods=None):
-		self.app.add_url_rule(endpoint,endpoint_name,handler,methods = methods)
-
+		self.app.add_url_rule(endpoint,endpoint_name,Endpoint(handler,endpoint_name),methods = methods)
 
 
 	def run_server(self):
@@ -195,7 +236,6 @@ class CACoreServer(Server) :
 
 		except ValueError as error:
 
-			print("Invalid json")
 			return False
 
 
@@ -208,7 +248,6 @@ class CACoreServer(Server) :
 
 		except Exception as e :
 
-			print("Message has no JSON")
 			return False
 
 
