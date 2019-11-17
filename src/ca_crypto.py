@@ -9,22 +9,34 @@ from utils import Utils
 class CACrypto :
 
 
-	def __init__(self,ca_p12_path,load=False):
+	def __init__(self,ca_p12_path,crl_path,employee_folder,passphrase,load_p12=False,load_crl=False):
 
 		self.ca_p12_path = ca_p12_path
+		self.crl_path = crl_path
+		self.p12_folder = employee_folder
+		self.passphrase = passphrase
 
-		if load :
+		if load_p12 :
 
 			self.load_ca_p12()
+			self.load_crl()
 
 		else :
 
 			self.gen_new_ca_key_cert()
 
+		if load_crl :
 
-	def load_crl(self,path):
+			self.load_crl()
 
-		data = open(path,"rb")
+		else :
+
+			self.new_crl()
+
+
+	def load_crl(self):
+
+		data = open(self.crl_path,"rb")
 		self.crl = crypto.load_crl(FILETYPE_PEM,data.read())
 		print(type(self.crl))
 		data.close()
@@ -33,6 +45,8 @@ class CACrypto :
 	def new_crl(self):
 
 		self.crl = crypto.CRL()
+		self.write_crl()
+
 
 
 	def revoke_sn(self,sn):
@@ -43,26 +57,24 @@ class CACrypto :
 		self.crl.add_revoked(revoke)
 		self.crl.set_lastUpdate(Utils.asn1_date().encode('UTF-8'))
 
-	def write_crl(self,path):
+	def write_crl(self):
 
 		crl_bytes = self.crl.export(self.ca_cert,self.ca_key,
 			type=FILETYPE_PEM,digest=b"sha256")
-		print(crl_bytes.decode('UTF-8'))
-		file = open(path,'wb')
+		file = open(self.crl_path,'wb')
 		file.write(crl_bytes)
 		file.close()
 	
 	def get_crl_bytes(self):
 
 		return self.crl.export(self.ca_cert,self.ca_key,
-			type=FILETYPE_PEM,digest=b"sha256")
+			type=FILETYPE_PEM,digest=b"sha256").decode('utf-8')
 
 
 	def generate_keys(self):
 		key = crypto.PKey()
 		key.generate_key(TYPE_RSA,4096)
 		return key
-
 
 	def gen_new_ca_key_cert(self):
 
@@ -76,7 +88,6 @@ class CACrypto :
 		self.ca_pkcs12.set_certificate(cert)
 		self.write_ca_p12()
 
-
 	def new_employee_cert(self,uid,lastname,firstname,email,serial_number):
 
 		subject = self.get_employee_name(uid,lastname,firstname,email)
@@ -86,13 +97,19 @@ class CACrypto :
 		pkcs12 = crypto.PKCS12()
 		pkcs12.set_certificate(cert)
 		pkcs12.set_privatekey(subject_key)
-		return pkcs12.export()
+		p12bytes = pkcs12.export()
+		p12bytes_encrypted = pkcs12.export(passphrase=self.passphrase.encode('utf-8'))
+		path = self.p12_folder + "/" + "uid" + str(uid) + "sn" + str(serial_number) + ".p12"
+		file = open(path,"wb")
+		file.write(p12bytes_encrypted)
+		file.close()
+		return p12bytes
 
 
 	def load_ca_p12(self):
 
 		sk_bin = open(self.ca_p12_path,"rb")
-		self.ca_pkcs12 = crypto.load_pkcs12(sk_bin.read())
+		self.ca_pkcs12 = crypto.load_pkcs12(sk_bin.read(),passphrase=self.passphrase.encode('utf-8'))
 		self.ca_key = self.ca_pkcs12.get_privatekey()
 		self.ca_cert = self.ca_pkcs12.get_certificate()
 		sk_bin.close()
@@ -101,7 +118,7 @@ class CACrypto :
 	def write_ca_p12(self):
 
 		p12file = open(self.ca_p12_path,"wb")
-		pkcs_string = self.ca_pkcs12.export()
+		pkcs_string = self.ca_pkcs12.export(passphrase=self.passphrase.encode('utf-8'))
 		p12file.write(pkcs_string)
 		p12file.close()
 

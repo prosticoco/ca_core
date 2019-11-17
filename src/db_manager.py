@@ -4,34 +4,36 @@ import traceback
 
 
 
-insertQuery = """ INSERT INTO keyStore (uid,valid)
-	VALUES (%s,'valid');"""
 
-checkQuery = """ SELECT valid FROM keyStore 
-	WHERE uid = %s AND valid = 'valid';"""
-
-selectQuery = """ SELECT * FROM keyStore """
-
-getRowCount = """ SELECT COUNT(*) FROM keyStore"""
-
-updateQuery = """ UPDATE keyStore 
-SET 
-valid = 'revoked'
-WHERE
-uid = %s;"""
-
-getRovkedQuery = """
-SELECT * FROM keyStore
-	WHERE valid = 'revoked';"""
-
-checkRevokedCertificate = """
-SELECT * FROM keyStore
-	WHERE uid=%s AND valid = 'valid';"""
-
-getSerial = """SELECT MAX(sn) FROM keyStore"""
 
 
 class DBManager :
+
+	insertQuery = """ INSERT INTO keyStore (uid,valid)
+	VALUES (%s,'valid');"""
+
+	checkQuery = """ SELECT valid FROM keyStore 
+		WHERE uid = %s AND valid = 'valid';"""
+
+	selectQuery = """ SELECT * FROM keyStore """
+
+	getRowCount = """ SELECT COUNT(*) FROM keyStore"""
+
+	updateQuery = """ UPDATE keyStore 
+	SET 
+	valid = 'revoked'
+	WHERE
+	sn = %s;"""
+
+	getRovkedQuery = """
+	SELECT sn FROM keyStore
+		WHERE valid = 'revoked';"""
+
+	checkRevokedCertificate = """
+	SELECT * FROM keyStore
+		WHERE uid=%s AND valid = 'valid';"""
+
+	getSerial = """SELECT MAX(sn) FROM keyStore"""
 	"""Summary
 ​
 	Baseline class to connect to a mySQL database and execute 
@@ -65,7 +67,7 @@ class DBManager :
 		try:
 			mySql_Create_Table_Query = """ CREATE TABLE IF NOT EXISTS keyStore
 			(sn INT AUTO_INCREMENT PRIMARY KEY,
-			uid VARCHAR(20) NOT NULL,  valid VARCHAR(10) NOT NULL)
+			uid VARCHAR(20) NOT NULL, valid VARCHAR(10) NOT NULL)
 			"""
 			self.cursor.execute(mySql_Create_Table_Query)
 			print("keyStore created successfully!")
@@ -73,7 +75,16 @@ class DBManager :
 		except mysql.connector.Error as error:
 			print("Failed to create table in MySQL: {}".format(error))
 
-		
+	
+	def revoke_cert(self,sn):
+
+		self.insert_query(self.updateQuery,(int(sn),))
+
+
+
+	def add_cert(self,uid):
+
+		self.insert_query(self.insertQuery,(uid,))
 
 
 	def err_handler(self,exc):
@@ -85,6 +96,7 @@ class DBManager :
 		print("DBManager Error :")
 		print(type(exc))
 		traceback.print_exc()
+		raise exc
 
 	def insert_query(self,query,q_tuple):
 
@@ -126,16 +138,18 @@ class DBManager :
 		revokedCertificatesNumber = 0
 		currentSerialNumber = 0
 		try:
-			self.cursor.execute(getSerial)
-			currentSerialNumber = self.cursor.fetchall()[0][0] + 1
+			self.cursor.execute(self.getSerial)
+			currentSerialNumber = self.cursor.fetchall()[0][0]
+			if currentSerialNumber is None :
+				currentSerialNumber = 1
+			else :
+				currentSerialNumber += 1
 
-			self.cursor.execute(getRowCount)
+			self.cursor.execute(self.getRowCount)
 			num_issued = self.cursor.fetchall()[0][0]
 			
-			self.cursor.execute(getRovkedQuery)
+			self.cursor.execute(self.getRovkedQuery)
 			revokedCertificatesNumber = self.cursor.fetchall()
-
-			self.cursor.execute(getRowCount)
 
 		except Exception as e :
 			self.err_handler(e)
@@ -144,7 +158,7 @@ class DBManager :
 
 	def get_revocationList(self):
 		try:
-			self.cursor.execute(getRovkedQuery)
+			self.cursor.execute(self.getRovkedQuery)
 			revocationList = self.cursor.fetchall()
 
 		except Exception as e :
@@ -161,11 +175,11 @@ class DBManager :
 	def check_validCertificate(self, name):
 		nameTuple = (name, )
 		try:
-			self.cursor.execute(checkRevokedCertificate, nameTuple)
+			self.cursor.execute(self.checkRevokedCertificate, nameTuple)
 			validCertificateList = self.cursor.fetchall()
 
 			if(len(validCertificateList)==0):
-				return False, 
+				return False, None
 
 			else:
 				validSerialNumbers = []
@@ -195,10 +209,15 @@ if __name__ == '__main__':
 	db_manager = DBManager('localhost','root','toor','coreCA')
 
 	####	How to insert an entity
-	db_manager.insert_query(insertQuery, ('Abbas','12345'))
+	db_manager.add_cert('pr')
+	db_manager.add_cert('prost')
+	db_manager.add_cert('prosty')
 
 	####	How to revoke a certificate of a user
-	#db_manager.update_query(updateQuery, ('Hassan', '12345'))
+	db_manager.revoke_cert(1)
+	db_manager.revoke_cert(4)
+
+	print(db_manager.get_revocationList())
 	
 	####	How to get current state
 	result = db_manager.get_currentState()
@@ -210,8 +229,8 @@ if __name__ == '__main__':
 	####	How to check if a user has any valid certificates
 	####	If yes, it reruns a list [True, [list of all valid certificates]]
 	####	If no, it returns a list [False, []]
-	#result = db_manager.check_validCertificate('Mehdi')
-	
+	result = db_manager.check_validCertificate('pr')
+	print(result)
 	####	How to disconnect from database
 	db_manager.disconnectDB()
 
