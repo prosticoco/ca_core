@@ -70,7 +70,6 @@ class DBManager :
 			uid VARCHAR(20) NOT NULL, valid VARCHAR(10) NOT NULL)
 			"""
 			self.cursor.execute(mySql_Create_Table_Query)
-			print("keyStore created successfully!")
 
 		except mysql.connector.Error as error:
 			print("Failed to create table in MySQL: {}".format(error))
@@ -202,6 +201,9 @@ class DBManager :
 
 			except Exception as e:
 				print('Can not close the connection to database')
+
+
+
 
 
 if __name__ == '__main__':

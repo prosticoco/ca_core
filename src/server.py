@@ -49,14 +49,11 @@ class Endpoint :
 
 
 
-
-
-
 class Server :
 
 	def __init__(self,name,ip,port,certificate=None,key=None):
 
-		logging.basicConfig(filename='logs/server.log',level=logging.DEBUG)
+		logging.basicConfig(filename='logs/server_ca_core.log',level=logging.DEBUG)
 
 		self.app = Flask(name)
 		self.port = port

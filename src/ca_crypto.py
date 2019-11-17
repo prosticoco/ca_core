@@ -38,7 +38,6 @@ class CACrypto :
 
 		data = open(self.crl_path,"rb")
 		self.crl = crypto.load_crl(FILETYPE_PEM,data.read())
-		print(type(self.crl))
 		data.close()
 
 
