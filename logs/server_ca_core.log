@@ -1,0 +1,13 @@
+INFO:root:POST new_certificate 127.0.0.1 
+INFO:root:{'uid': 'adrien', 'lastname': 'prost', 'firstname': 'adrien', 'email': 'aprost@gmail.com'}
+INFO:root:GET current_state 127.0.0.1 
+INFO:root:POST revoke_certificate 127.0.0.1 
+INFO:root:{'uid': 'adrien'}
+INFO:root:GET current_state 127.0.0.1 
+INFO:root:POST revoke_certificate 127.0.0.1 
+INFO:root:{'uid': ''}
+INFO:root:GET revocation_list 127.0.0.1 
+INFO:root:GET current_state 127.0.0.1 
+INFO:root:GET current_state 127.0.0.1 
+INFO:root:POST revoke_certificate 127.0.0.1 
+INFO:root:{'uid': 'pr'}
