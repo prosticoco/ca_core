@@ -6,6 +6,7 @@ import os
 import traceback
 from db_manager import *
 from ca_crypto import *
+from utils import *
 import base64
 import logging
 log = logging.getLogger('werkzeug')
@@ -32,6 +33,7 @@ class Endpoint :
 		try : 
 
 			log_line = ""
+			log_line += str(Utils.asn1_date())
 			log_line += str(request.method) + " "
 			log_line += str(self.name) + " "
 			log_line += str(request.remote_addr) + " "
