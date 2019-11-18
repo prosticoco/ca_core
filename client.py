@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--port', default=5001)
-	parser.add_argument('--ip',default='127.0.0.1')
-	parser.add_argument('--cert',default='keys/server_certificate.crt')
+	parser.add_argument('--ip',default='10.0.0.3')
+	parser.add_argument('--cert',default='keys/ca.pem')
 	arguments = parser.parse_args()
 	main(arguments)

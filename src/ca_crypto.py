@@ -111,6 +111,7 @@ class CACrypto :
 		self.ca_pkcs12 = crypto.load_pkcs12(sk_bin.read(),passphrase=self.passphrase.encode('utf-8'))
 		self.ca_key = self.ca_pkcs12.get_privatekey()
 		self.ca_cert = self.ca_pkcs12.get_certificate()
+		self.ca_name = self.ca_cert.get_subject()
 		sk_bin.close()
 
 
@@ -153,7 +154,7 @@ class CACrypto :
 
 		name = self.get_imovies_name()
 		name.OU = "Employee"
-		name.CN = lastname + " " + firstname + " " + uid
+		name.CN = uid + " " + lastname + " " + firstname 
 		name.emailAddress = email
 		return name
 
