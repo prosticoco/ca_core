@@ -16,17 +16,40 @@ log.setLevel(logging.ERROR)
 
 class Endpoint :
 
-	def __init__(self,action,name):
+	def __init__(self,action,name,secret_hash):
 
 		self.action = action
 		self.name = name
+		self.secret_hash = secret_hash
 
 	def __call__(self, *args):
 
 		self.log_before_action(request)
+
+
+		pwd = request.headers.get('secret',None) or None
+	
+		if pwd is None :
+			self.log_no_password()
+			return self.error_response("Need to Provide a Password in Header field 'secret'",401)
+		
+		if not self.check_pwd(pwd):
+			self.log_auth_failed()
+			return self.error_response('Wrong Password in Header',401)
+
 		answer = self.action()
 
 		return answer
+
+	def log_auth_failed(self):
+
+		log_line = "A Wrong password has been entered"
+		logging.critical(log_line)
+
+	def log_no_password(self):
+
+		log_line = "No Password Given"
+		logging.warning(log_line)
 
 	def log_before_action(self,request):
 
@@ -49,23 +72,38 @@ class Endpoint :
 			log_line += str(request.remote_addr)
 			logging.info(log_line)
 
+	def check_pwd(self,pwd):
+
+		hashed = hashlib.sha256(pwd.encode('utf-8')).hexdigest()
+		return hashed == self.secret_hash
+
+	def error_response(self,error_text,status_code):
+
+		error_r = dict()
+		error_r['description'] = error_text
+
+		return make_response(jsonify(error_r),status_code) 
+
 
 
 class Server :
 
-	def __init__(self,name,ip,port,certificate=None,key=None):
+	def __init__(self,name,ip,port,certificate=None,key=None,secret_file='keys/secret_password.txt'):
 
 		logging.basicConfig(filename='logs/server_ca_core.log',level=logging.DEBUG)
 
 		self.app = Flask(name)
 		self.port = port
 		self.ip = ip
+		sec = open(secret_file,'r')
+		self.secret_hash = sec.read()
+		sec.close()
 		self.certificate = certificate
 		self.key = key
 
 
 	def add_url(self,endpoint=None,endpoint_name=None,handler=None,methods=None):
-		self.app.add_url_rule(endpoint,endpoint_name,Endpoint(handler,endpoint_name),methods = methods)
+		self.app.add_url_rule(endpoint,endpoint_name,Endpoint(handler,endpoint_name,self.secret_hash),methods = methods)
 
 
 	def run_server(self):
