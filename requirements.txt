@@ -12,7 +12,7 @@ MarkupSafe==1.1.1
 mysql-connector==2.2.9
 mysql-connector-python==8.0.18
 pkg-resources==0.0.0
-protobuf==3.10.0
+protobuf==3.18.3
 pycparser==2.19
 pyOpenSSL==19.0.0
 requests==2.22.0
